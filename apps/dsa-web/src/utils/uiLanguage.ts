@@ -3,7 +3,7 @@ import type { UiLanguage } from '../i18n/uiText';
 export const UI_LANGUAGE_STORAGE_KEY = 'dsa.uiLanguage';
 
 export function normalizeUiLanguage(value?: string | null): UiLanguage | null {
-  if (value === 'zh' || value === 'en') {
+  if (value === 'zh' || value === 'zh-tw' || value === 'en') {
     return value;
   }
   return null;
@@ -53,6 +53,9 @@ function getBrowserUiLanguage(navigatorLike?: Pick<Navigator, 'language' | 'lang
 
   for (const candidate of languageCandidates) {
     const normalized = candidate.toLowerCase();
+    if (normalized.startsWith('zh-tw') || normalized.startsWith('zh-hk')) {
+      return 'zh-tw';
+    }
     if (normalized.startsWith('zh')) {
       return 'zh';
     }
