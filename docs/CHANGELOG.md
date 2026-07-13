@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [改进] 通知推送与完整 Markdown/微信报告不再重复附加“AI 决策信号”摘要，DecisionSignal 的存储、告警和 Web AI 建议页保持不变。
 - [改进] TickFlow 新增基于申万一级行业池的行业涨跌排行 fallback，并将基本面/市场结构单能力默认超时由 3 秒调整为 8 秒，降低正常慢响应被提前降级的概率。
 - [新功能] 新增繁體中文（zh-tw）為獨立報告語言選項，覆蓋 Prompt 指令、本地化標籤（決策動作、報告欄位）、通知頻道資料來源名稱、API/配置 Schema 類型驗證及 Web 前端語言映射。
+- [新功能] 补全问股（ChatPage）完整的英文与繁体中文本地化支持，实现多语言切换联动，并同步更新静态 `api_spec.json`。
 <!-- 新条目格式：- [类型] 描述（类型取值：新功能/改进/修复/文档/测试/chore）-->
 <!-- 每条独立一行追加到本段末尾，无需分类标题，合并时冲突最小 -->
 

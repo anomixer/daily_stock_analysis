@@ -1,4 +1,4 @@
-import type { SystemConfigCategory } from '../types/systemConfig';
+import type { SystemConfigCategory, SetupStatusCheck } from '../types/systemConfig';
 import type { UiLanguage } from '../i18n/uiText';
 
 const categoryTitleMap: Record<UiLanguage, Record<SystemConfigCategory, string>> = {
@@ -611,4 +611,168 @@ export function getFieldOptionLabel(
   }
 
   return fallbackLabel ?? value;
+}
+
+const S2T_MAP: Record<string, string> = {
+  '与': '與', '专': '專', '业': '業', '东': '東', '两': '兩', '个': '個', '串': '串', '主': '主', '争': '爭', '产': '產',
+  '仅': '僅', '仓': '倉', '件': '件', '任': '任', '份': '份', '优': '優', '会': '會', '传': '傳', '估': '估', '低': '低',
+  '保': '保', '修': '修', '值': '值', '全': '全', '关': '關', '兼': '兼', '内': '內', '写': '寫', '决': '決', '准': '準',
+  '凭': '憑', '函': '函', '分': '分', '划': '劃', '则': '則', '制': '制', '力': '力', '加': '加', '务': '務', '动': '動',
+  '势': '勢', '化': '化', '升': '升', '华': '華', '单': '單', '南': '南', '压': '壓', '反': '反', '发': '發', '受': '受',
+  '变': '變', '口': '口', '只': '隻', '号': '號', '同': '同', '听': '聽', '启': '啟', '呈': '呈', '器': '器', '围': '圍',
+  '国': '國', '型': '型', '增': '增', '复': '複', '头': '頭', '夹': '夾', '安': '安', '宏': '宏', '定': '定', '实': '實',
+  '审': '審', '客': '客', '容': '容', '密': '密', '对': '對', '导': '導', '射': '射', '局': '局', '层': '層', '展': '展',
+  '属': '屬', '履': '履', '布': '布', '帐': '帳', '常': '常', '并': '並', '序': '序', '库': '庫', '应': '應', '开': '開',
+  '异': '異', '引': '引', '弹': '彈', '强': '強', '录': '錄', '形': '形', '律': '律', '性': '性', '总': '總', '息': '息',
+  '成': '成', '户': '戶', '执': '執', '承': '承', '护': '護', '报': '報', '持': '持', '指': '指', '换': '換', '据': '據',
+  '排': '排', '接': '接', '控': '控', '描': '描', '提': '提', '搜': '搜', '支': '支', '改': '改', '政': '政', '效': '效',
+  '数': '數', '新': '新', '无': '無', '时': '時', '明': '明', '映': '映', '更': '更', '服': '服', '期': '期', '本': '本',
+  '机': '機', '权': '權', '束': '束', '条': '條', '极': '極', '构': '構', '标': '標', '栏': '欄', '格': '格', '档': '檔',
+  '检': '檢', '步': '步', '段': '段', '法': '法', '测': '測', '消': '消', '渠': '渠', '温': '溫', '演': '演', '版': '版',
+  '现': '現', '用': '用', '略': '略', '监': '監', '盖': '蓋', '盘': '盤', '目': '目', '知': '知', '码': '碼', '确': '確',
+  '示': '示', '程': '程', '突': '突', '端': '端', '等': '等', '策': '策', '简': '簡', '类': '類', '系': '系', '索': '索',
+  '繁': '繁', '约': '約', '级': '級', '线': '線', '细': '細', '结': '結', '络': '絡', '统': '統', '继': '繼', '编': '編',
+  '缩': '縮', '网': '網', '舆': '輿', '节': '節', '蔽': '蔽', '藏': '藏', '虑': '慮', '行': '行', '表': '表', '覆': '覆',
+  '见': '見', '观': '觀', '规': '規', '视': '視', '览': '覽', '觉': '覺', '解': '解', '计': '計', '认': '認', '议': '議',
+  '讯': '訊', '许': '許', '论': '論', '设': '設', '证': '證', '评': '評', '识': '識', '译': '譯', '试': '試', '话': '話',
+  '详': '詳', '语': '語', '误': '誤', '说': '說', '请': '請', '读': '讀', '调': '調', '象': '象', '账': '賬', '质': '質',
+  '赞': '贊', '路': '路', '身': '身', '转': '轉', '载': '載', '辑': '輯', '输': '輸', '辩': '辯', '达': '達', '过': '過',
+  '运': '運', '进': '進', '连': '連', '述': '述', '退': '退', '适': '適', '选': '選', '递': '遞', '通': '通', '速': '速',
+  '造': '造', '逻': '邏', '道': '道', '遮': '遮', '避': '避', '部': '部', '配': '配', '释': '釋', '重': '重', '量': '量',
+  '鉴': '鑑', '钥': '鑰', '锁': '鎖', '错': '錯', '键': '鍵', '长': '長', '门': '門', '问': '問', '间': '間', '阅': '閱',
+  '阐': '闡', '队': '隊', '防': '防', '阵': '陣', '阶': '階', '阻': '阻', '陈': '陳', '降': '降', '限': '限', '险': '險',
+  '隐': '隱', '障': '障', '需': '需', '非': '非', '顾': '顧', '题': '題', '风': '風', '驳': '駁', '验': '驗', '骤': '驟',
+  '高': '高'
+};
+
+export function convertToTraditional(text: string): string {
+  return text.split('').map((char) => S2T_MAP[char] || char).join('');
+}
+
+export function getFieldTitle(key: string, fallback?: string, locale: UiLanguage = 'zh'): string {
+  if (locale === 'zh') {
+    return fieldTitleMap[key] || fallback || key;
+  }
+  if (locale === 'zh-tw') {
+    const zhTitle = fieldTitleMap[key] || fallback || key;
+    return convertToTraditional(zhTitle);
+  }
+  return fallback || key;
+}
+
+export function getFieldDescription(key: string, fallback?: string, locale: UiLanguage = 'zh'): string {
+  if (locale === 'zh') {
+    return fieldDescriptionMap[key] || fallback || '';
+  }
+  if (locale === 'zh-tw') {
+    const zhDesc = fieldDescriptionMap[key] || fallback || '';
+    return convertToTraditional(zhDesc);
+  }
+  return fallback || '';
+}
+
+export function getLocalizedSetupCheck(
+  check: SetupStatusCheck,
+  locale: UiLanguage,
+): { title: string; message: string; nextStep?: string } {
+  const titleMap: Record<UiLanguage, Record<string, string>> = {
+    zh: {
+      llm_primary: 'LLM 主渠道',
+      llm_agent: 'Agent 渠道',
+      stock_list: '自选股',
+      notification: '通知渠道',
+      storage: '数据库 / 本地存储',
+    },
+    'zh-tw': {
+      llm_primary: 'LLM 主渠道',
+      llm_agent: 'Agent 渠道',
+      stock_list: '自選股',
+      notification: '通知渠道',
+      storage: '資料庫 / 本地儲存',
+    },
+    en: {
+      llm_primary: 'Primary LLM Channel',
+      llm_agent: 'Agent Channel',
+      stock_list: 'Watchlist',
+      notification: 'Notification Channels',
+      storage: 'Database / Local Storage',
+    },
+  };
+  const title = titleMap[locale]?.[check.key] || check.title;
+
+  if (locale === 'zh') {
+    return { title, message: check.message, nextStep: check.nextStep ?? undefined };
+  }
+
+  let message = check.message;
+  let nextStep = check.nextStep;
+
+  if (locale === 'zh-tw') {
+    message = convertToTraditional(message);
+    if (nextStep) {
+      nextStep = convertToTraditional(nextStep);
+    }
+  } else if (locale === 'en') {
+    if (check.key === 'llm_primary') {
+      if (check.status === 'configured') {
+        message = message
+          .replace(/已启用/g, 'Enabled')
+          .replace(/本地生成/g, 'local generation')
+          .replace(/已检测到/g, 'Detected')
+          .replace(/显式主模型/g, 'explicit primary model')
+          .replace(/LiteLLM YAML/g, 'LiteLLM YAML')
+          .replace(/LLM 渠道/g, 'LLM channel')
+          .replace(/legacy provider/g, 'legacy provider');
+      } else {
+        message = message.includes('codex_cli')
+          ? 'Selected codex_cli, but codex executable was not found in PATH.'
+          : message.replace(/已选择/g, 'Selected').replace(/但未找到/g, 'but not found').replace(/可执行文件/g, 'executable');
+        nextStep = 'Please configure LITELLM_MODEL, LLM_CHANNELS, LITELLM_CONFIG or legacy provider API Key.';
+      }
+    } else if (check.key === 'llm_agent') {
+      if (check.status === 'configured') {
+        message = message
+          .replace(/普通分析使用/g, 'Base analysis uses')
+          .replace(/工具调用仍使用/g, 'tool calls still use');
+      } else {
+        if (message.includes('Hermes')) {
+          message = 'Base analysis uses Codex CLI; but current Agent path inherits Hermes-only model, which does not support tool calls.';
+          nextStep = 'To use Ask-Stock Agent, please configure a non-Hermes AGENT_LITELLM_MODEL, or use mixed Agent route.';
+        } else if (message.includes('text-only')) {
+          message = message.replace(/Agent 工具调用暂不支持/g, 'Agent tool calling does not support');
+          nextStep = 'Please set AGENT_GENERATION_BACKEND to auto or litellm, and configure LiteLLM channel.';
+        } else {
+          message = message.replace(/Agent 主模型/g, 'Agent primary model').replace(/缺少可用渠道或匹配的 API Key/g, 'lacks available channels or matching API Key');
+          nextStep = 'Please adjust AGENT_LITELLM_MODEL or add channel configuration.';
+        }
+      }
+    } else if (check.key === 'stock_list') {
+      if (check.status === 'configured') {
+        const match = message.match(/\\d+/);
+        const count = match ? match[0] : '0';
+        message = `Configured ${count} stock(s).`;
+      } else {
+        message = 'Current STOCK_LIST is empty.';
+        nextStep = 'Please add at least 1 stock for the first run.';
+      }
+    } else if (check.key === 'notification') {
+      if (check.status === 'configured') {
+        message = 'Configured at least one notification channel.';
+      } else {
+        message = 'No notification channel configured. Reports will only be saved locally.';
+        nextStep = 'Please configure Discord, WeChat, Email, Telegram, or custom webhook to enable push.';
+      }
+    } else if (check.key === 'storage') {
+      if (check.status === 'configured') {
+        message = message.replace(/数据库路径可用:/g, 'Database path available:').replace(/数据库上级目录可创建:/g, 'Database parent directory can be created:');
+      } else {
+        message = message
+          .replace(/数据库路径父目录不可用:/g, 'Database parent directory not available:')
+          .replace(/数据库路径上级目录不可写:/g, 'Database parent directory not writable:');
+        nextStep = 'Please check DATABASE_PATH or directory permissions.';
+      }
+    }
+  }
+
+  return { title, message, nextStep: nextStep ?? undefined };
 }
